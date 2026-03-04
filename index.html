@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧪 PSG Mad Labs</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0e17;--sf:#1a1830;--sf2:#241f42;--gold:#f5a623;--teal:#2dd4bf;--red:#ef4444;--grn:#22c55e;--txt:#f0f0f0;--mut:#7b7b93;--rad:10px}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;justify-content:center;align-items:center}
+#app{width:100%;max-width:920px;padding:16px}
+.screen{display:none}.screen.active{display:block}
+h1{font-size:1.8rem;text-align:center;margin-bottom:12px}
+h1 .sub{font-size:0.85rem;color:var(--mut);font-weight:400;display:block;margin-top:4px}
+textarea,input[type=text],input[type=password]{width:100%;padding:10px;margin:6px 0;background:var(--sf);border:1px solid #333;border-radius:var(--rad);color:var(--txt);font-size:0.88rem;outline:none}
+textarea{height:90px;font-family:monospace;font-size:0.8rem}
+textarea:focus,input:focus{border-color:var(--gold)}
+button{padding:9px 18px;border:none;border-radius:var(--rad);font-size:0.92rem;cursor:pointer;font-weight:600;transition:transform 0.15s}
+button:active{transform:scale(0.97)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e6950f);color:#000;display:block;width:100%;margin-top:10px}
+.btn-teal{background:var(--teal);color:#000}
+select{width:100%;padding:8px;margin:4px 0;background:var(--sf);border:1px solid #333;border-radius:var(--rad);color:var(--txt);font-size:0.88rem}
+/* Avatars */
+#avatarGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}
+.av-opt{font-size:1.8rem;text-align:center;padding:6px;border-radius:var(--rad);cursor:pointer;border:2px solid transparent;background:var(--sf);transition:all 0.15s}
+.av-opt:hover{border-color:var(--gold)}.av-opt.sel{border-color:var(--gold);background:rgba(245,166,35,0.15);transform:scale(1.1)}
+/* Lobby */
+.room-code{font-size:2.2rem;font-weight:800;color:var(--gold);letter-spacing:5px;text-align:center;margin:8px 0}
+.share-url{width:100%;padding:6px;background:var(--sf);border:1px solid #333;border-radius:6px;color:var(--teal);font-size:0.72rem;margin:6px 0}
+.pl-item{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--sf);border-radius:var(--rad);margin:3px 0;font-size:0.92rem}
+.pl-item .av{font-size:1.3rem}
+#hostCtrl{margin-top:14px}
+#hostCtrl label{display:block;font-size:0.8rem;color:var(--mut);margin-top:8px}
+/* Game */
+#game.active{display:flex;gap:12px}
+#gameMain{flex:1;min-width:0}
+#coldCall{text-align:center;font-size:2.5rem;padding:16px;min-height:110px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:var(--sf);border-radius:var(--rad);margin-bottom:10px}
+#timerBar{height:8px;background:var(--sf);border-radius:4px;overflow:hidden;margin:8px 0}
+#timerFill{height:100%;background:var(--gold);border-radius:4px;width:100%;transition:width 0.1s linear}
+#timerFill.danger{background:var(--red)}
+#wordPrompt{text-align:center;font-size:1.25rem;margin:6px 0;color:var(--teal);font-weight:600}
+#wordInput{font-size:1.1rem;text-align:center;border:2px solid var(--teal);padding:12px}
+#wordInput:disabled{opacity:0.35;border-color:#333}
+.dash-row{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--sf);border-radius:6px;margin:2px 0;font-size:0.82rem}
+.dash-row .nm{flex:1}.dash-row .av{font-size:1.1rem}
+.st{padding:2px 7px;border-radius:4px;font-size:0.72rem;font-weight:600}
+.st-ok{background:rgba(34,197,94,0.15);color:var(--grn)}.st-miss{background:rgba(239,68,68,0.15);color:var(--red)}
+/* Sketch */
+#sketchSide{width:200px;background:var(--sf);border-radius:var(--rad);padding:10px;flex-shrink:0;overflow-y:auto;max-height:80vh}
+#sketchSide h3{font-size:0.82rem;margin-bottom:6px}
+#sketchCanvas{background:#fff;border-radius:6px;cursor:crosshair;width:100%;display:block}
+#sketchTools{display:flex;gap:4px;margin:5px 0;align-items:center}
+.c-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}.c-btn.act{border-color:var(--gold)}
+.e-btn{background:var(--sf2);font-size:0.68rem;padding:2px 6px;border-radius:10px;border:1px solid #555;cursor:pointer;color:var(--txt)}
+#sketchSide .submit-sk{width:100%;padding:5px;font-size:0.78rem;background:var(--teal);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:4px}
+#sketchGallery{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:6px}
+.sk-thumb{width:100%;border-radius:3px;border:1px solid #333}
+/* Reveal */
+#storyText{font-size:1.05rem;line-height:1.8;padding:18px;background:var(--sf);border-radius:var(--rad);margin-bottom:14px}
+#storyText mark{background:rgba(245,166,35,0.25);color:var(--gold);padding:1px 4px;border-radius:3px}
+#storyText mark.missed{background:rgba(239,68,68,0.2);color:var(--red);text-decoration:line-through}
+/* Comic */
+#comic.active{display:flex;flex-direction:column;align-items:center}
+#comicBox{width:100%;min-height:380px;position:relative}
+.c-panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;border:4px solid #000;border-radius:var(--rad);text-align:center;opacity:0;transition:opacity 0.6s}
+.c-panel.act{opacity:1}
+.c-panel::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.05) 1px,transparent 1px);background-size:8px 8px;border-radius:var(--rad);pointer-events:none}
+.c-panel .emo{font-size:3.5rem;margin-bottom:10px}
+.c-panel .nar{font-size:1rem;font-style:italic;margin-bottom:8px;max-width:90%}
+.c-panel .dia{font-size:1.3rem;font-weight:700;padding:10px 18px;background:#fff;color:#000;border-radius:18px;position:relative;max-width:85%;margin-top:8px}
+.c-panel .dia::after{content:'';position:absolute;bottom:-9px;left:28px;border:9px solid transparent;border-top-color:#fff}
+.c-panel .sk-img{max-width:160px;max-height:120px;border-radius:6px;border:3px solid #000;margin:6px}
+.c-panel .cred{font-size:0.65rem;color:rgba(255,255,255,0.5);position:absolute;bottom:6px;right:10px}
+.c-dots{display:flex;gap:5px;margin-top:12px}.c-dot{width:9px;height:9px;border-radius:50%;background:#333}.c-dot.act{background:var(--gold)}
+#playAgainBtn{background:var(--gold);color:#000;margin-top:14px;display:none}
+.loading-txt{color:var(--mut);font-size:1rem;text-align:center;padding:40px}
+/* Animations */
+@keyframes pop{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:0.3}}
+.pop{animation:pop 0.3s ease}.flash{animation:flash 0.3s ease infinite}
+.result{font-size:2.2rem;animation:pop 0.3s ease}
+/* Toast */
+.toast{position:fixed;bottom:14px;right:14px;background:var(--sf2);border:1px solid var(--grn);border-radius:var(--rad);padding:7px 14px;color:var(--grn);font-size:0.82rem;transform:translateY(70px);opacity:0;transition:all 0.3s;z-index:99}
+.toast.show{transform:translateY(0);opacity:1}.toast.err{border-color:var(--red);color:var(--red)}
+/* Responsive */
+@media(max-width:700px){#game.active{flex-direction:column}#sketchSide{width:100%}#sketchCanvas{height:140px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="setup" class="screen active">
+    <h1>🧪 PSG Mad Labs<span class="sub">Multiplayer party game</span></h1>
+    <textarea id="fbConfig" placeholder='Paste your Firebase config JSON here...&#10;{"apiKey":"...","databaseURL":"...","projectId":"..."}'></textarea>
+    <input type="password" id="aiKey" placeholder="Anthropic API key (for comic generation)" />
+    <button class="btn-gold" onclick="createGame()">🎮 Create Game</button>
+  </div>
+  <div id="join" class="screen">
+    <h1>🧪 Join the Game</h1>
+    <input type="text" id="pName" placeholder="Your display name" maxlength="15" />
+    <div id="avatarGrid"></div>
+    <button class="btn-gold" onclick="joinGame()">Join Game</button>
+  </div>
+  <div id="lobby" class="screen">
+    <h1>🧪 Lobby</h1>
+    <div id="roomInfo"></div>
+    <div id="playerList"></div>
+    <div id="hostCtrl" style="display:none">
+      <label>Story Template</label><select id="tplSel"></select>
+      <label>Timer</label><select id="tmrSel"><option value="3">3s — Chaos! 🔥</option><option value="5">5s — Spicy 🌶️</option><option value="8">8s — Chill 😎</option><option value="10">10s — Easy 🧘</option></select>
+      <button class="btn-gold" onclick="startGame()">🚀 Start Game</button>
+    </div>
+  </div>
+  <div id="game" class="screen">
+    <div id="gameMain">
+      <div id="coldCall"><span style="color:var(--mut)">Waiting to start...</span></div>
+      <div id="timerBar"><div id="timerFill"></div></div>
+      <div id="wordPrompt"></div>
+      <input type="text" id="wordInput" placeholder="Type a word..." maxlength="30" disabled />
+      <div id="dashboard" style="margin-top:12px"></div>
+    </div>
+    <div id="sketchSide">
+      <h3>✏️ Sketch a Scene</h3>
+      <canvas id="sketchCanvas" width="200" height="200"></canvas>
+      <div id="sketchTools"></div>
+      <button class="submit-sk" onclick="submitSketch()">Submit Sketch</button>
+      <div id="sketchGallery"></div>
+    </div>
+  </div>
+  <div id="reveal" class="screen">
+    <h1>📖 The Story</h1>
+    <div id="storyText"></div>
+    <button class="btn-gold" id="comicBtn" onclick="generateComic()">🎬 Generate Comic Movie</button>
+  </div>
+  <div id="comic" class="screen">
+    <h1>🎬 The Comic</h1>
+    <div id="comicBox"></div>
+    <div class="c-dots" id="comicDots"></div>
+    <button id="playAgainBtn" onclick="location.reload()">🔄 Play Again</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════ TEMPLATES ═══════════════ */
+const TEMPLATES=[
+{name:"The All-Hands Meeting",story:"Today our CEO made a [adjective] announcement. The company is pivoting to selling [noun] online. Everyone started to [verb] uncontrollably. The VP of Engineering showed a [adjective] prototype powered by [noun]. HR sent a [adjective] email reminding us to [verb] responsibly. The intern shared their screen showing [noun]. We agreed it was the most [adjective] all-hands since the Great [noun] Incident."},
+{name:"Slack Gone Wild",story:"Someone posted a [noun] in #general. The CEO replied with a [adjective] emoji. Marketing started to [verb] about brand guidelines. IT deployed a [adjective] bot that sends [noun] to every channel. Finance tried to [verb] but shared the [adjective] budget. By end of day everyone's status was [noun] and nobody could [verb] properly."},
+{name:"The Sprint Retro",story:"The scrum master opened with a [adjective] icebreaker involving [noun]. The team [verb] through 47 story points. One developer's PR was called [adjective] by reviewers. QA found a [noun] hiding in production. The product owner tried to [verb] the roadmap using a [adjective] spreadsheet about [noun]. We promised to [verb] better next sprint."},
+{name:"Remote Work Diaries",story:"My [noun] kept photobombing my Zoom call. The boss made a [adjective] comment about my background. I tried to [verb] but was on mute for [noun] minutes. Someone's [adjective] doorbell went off mid-presentation. I pretended to [verb] while looking at [noun]. The meeting ended with everyone feeling [adjective] about the quarterly [noun]."},
+{name:"The Product Launch",story:"We're launching a [adjective] feature called The [noun]. The demo crashed when someone tried to [verb] the main button. Marketing wrote a [adjective] press release comparing us to [noun]. Engineering promised to [verb] the bug before the [adjective] deadline. The CEO tweeted about [noun] and it went viral. Customers called the launch [adjective] and demanded more [noun]."}
+];
+const AVATARS=['🦊','🐙','🦄','🤖','🎸','🚀','🌮','🎲','🦜','🧙','🐳','🎭'];
+
+/* ═══════════════ STATE ═══════════════ */
+const S={db:null,room:null,pid:null,name:null,avatar:null,isHost:false,timerSec:3,blanks:[],template:null,fbConfig:null};
+let currentPlayers={},currentAnswers={},currentTurn=null,currentSketches={},timerIv=null;
+
+/* ═══════════════ HELPERS ═══════════════ */
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
+function toast(m,err){const t=$('toast');t.textContent=m;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',2500)}
+function genCode(){return Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('')}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+function parseBlanks(story){const b=[];let m;const re=/\[([^\]]+)\]/g;while((m=re.exec(story))!==null)b.push(m[1]);return b}
+
+/* ═══════════════ FIREBASE ═══════════════ */
+function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=r;document.head.appendChild(s)})}
+async function loadFB(cfg){if(window.firebase)return;await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js');firebase.initializeApp(cfg);S.db=firebase.database()}
+function dbRef(p){return S.db.ref(`rooms/${S.room}/${p}`)}
+function dbSet(p,v){return dbRef(p).set(v)}
+function dbPush(p,v){return dbRef(p).push(v)}
+function dbOn(p,cb){dbRef(p).on('value',s=>cb(s.val()))}
+
+/* ═══════════════ AUDIO ═══════════════ */
+let _ac;function ac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac}
+function playTone(freq,type,dur,vol=0.12){const c=ac(),o=c.createOscillator(),g=c.createGain();o.connect(g).connect(c.destination);o.type=type;o.frequency.value=freq;g.gain.value=vol;g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);o.start();o.stop(c.currentTime+dur)}
+function playCountdown(sec){const c=ac();for(let i=0;i<sec;i++){const o=c.createOscillator(),g=c.createGain();o.connect(g).connect(c.destination);o.frequency.value=880-(i*(440/sec));g.gain.value=0.1;g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+i+0.25);o.start(c.currentTime+i);o.stop(c.currentTime+i+0.25)}}
+function playDing(){playTone(880,'sine',0.4,0.15)}
+function playBuzz(){playTone(120,'sawtooth',0.4,0.15)}
+
+/* ═══════════════ INIT ═══════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  const hash=location.hash.slice(1),fc=new URLSearchParams(location.search).get('fc');
+  $('avatarGrid').innerHTML=AVATARS.map(a=>`<div class="av-opt" onclick="pickAvatar(this,'${a}')">${a}</div>`).join('');
+  $('tplSel').innerHTML=TEMPLATES.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+  if(hash&&fc){S.room=hash;S.fbConfig=JSON.parse(atob(fc));show('join')}
+  else{const saved=localStorage.getItem('mlcc-fb');if(saved)$('fbConfig').value=saved;show('setup')}
+});
+
+/* ═══════════════ SETUP ═══════════════ */
+async function createGame(){
+  let cfg,raw=$('fbConfig').value.trim(),key=$('aiKey').value.trim();
+  if(!raw)return toast('Paste Firebase config',1);
+  try{cfg=JSON.parse(raw)}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)cfg=JSON.parse(m[0]);else return toast('Invalid config JSON',1)}
+  localStorage.setItem('mlcc-fb',raw);if(key)localStorage.setItem('mlcc-ai',key);
+  S.fbConfig=cfg;await loadFB(cfg);S.room=genCode();S.isHost=true;
+  await dbSet('status','lobby');show('join');
+}
+
+/* ═══════════════ JOIN ═══════════════ */
+let selAvatar=null;
+function pickAvatar(el,a){document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');selAvatar=a}
+async function joinGame(){
+  const name=$('pName').value.trim();if(!name||!selAvatar)return toast('Enter name & pick avatar',1);
+  S.name=name;S.avatar=selAvatar;
+  if(!S.db){await loadFB(S.fbConfig)}
+  const ref=dbRef('players').push();S.pid=ref.key;
+  await ref.set({name,avatar:selAvatar,misses:0});
+  show('lobby');initLobby();
+}
+
+/* ═══════════════ LOBBY ═══════════════ */
+function initLobby(){
+  const base=location.href.split('?')[0].split('#')[0];
+  const url=`${base}?fc=${btoa(JSON.stringify(S.fbConfig))}#${S.room}`;
+  $('roomInfo').innerHTML=`<div class="room-code">${S.room}</div><p style="color:var(--mut);font-size:0.8rem;text-align:center">Share this link with your team:</p><input class="share-url" value="${url}" readonly onclick="this.select();navigator.clipboard.writeText(this.value);toast('Link copied!')" />`;
+  if(S.isHost)$('hostCtrl').style.display='block';
+  dbOn('players',p=>{currentPlayers=p||{};$('playerList').innerHTML=Object.entries(currentPlayers).map(([id,pl])=>`<div class="pl-item"><span class="av">${pl.avatar}</span><span>${pl.name}${id===S.pid?' (you)':''}</span></div>`).join('')});
+  dbOn('status',st=>{if(st==='playing')initGameScreen();if(st==='reveal')showReveal();if(st==='comic')showComic()});
+}
+async function startGame(){
+  if(Object.keys(currentPlayers).length<1)return toast('Need at least 1 player',1);
+  const ti=parseInt($('tplSel').value),ts=parseInt($('tmrSel').value);
+  S.timerSec=ts;S.template=TEMPLATES[ti];S.blanks=parseBlanks(S.template.story);
+  await dbSet('templateIdx',ti);await dbSet('timerSec',ts);await dbSet('status','playing');
+}
+
+/* ═══════════════ GAME ═══════════════ */
+function initGameScreen(){
+  show('game');initCanvas();
+  dbOn('templateIdx',i=>{S.template=TEMPLATES[i];S.blanks=parseBlanks(S.template.story)});
+  dbOn('timerSec',s=>S.timerSec=s);
+  dbOn('players',p=>{currentPlayers=p||{};renderDash()});
+  dbOn('answers',a=>{
+    const prev=currentAnswers;currentAnswers=a||{};renderDash();
+    if(currentTurn&&a&&a[currentTurn.blankIdx]&&(!prev||!prev[currentTurn.blankIdx])){
+      const ans=a[currentTurn.blankIdx];clearInterval(timerIv);$('timerFill').style.width='0%';$('wordInput').disabled=true;
+      if(ans.missed){playBuzz();$('coldCall').innerHTML=`<div class="result" style="color:var(--red)">✗ MISSED!</div>`}
+      else{playDing();$('coldCall').innerHTML=`<div class="result" style="color:var(--grn)">✓ "${ans.word}"</div>`}
+    }
+  });
+  dbOn('turn',t=>{currentTurn=t;if(t)onTurn(t)});
+  dbOn('sketches',sk=>{currentSketches=sk||{};renderGallery(sk)});
+  if(S.isHost)setTimeout(()=>runGame(),800);
+}
+async function runGame(){
+  let lastPid=null;
+  for(let i=0;i<S.blanks.length;i++){
+    const pids=Object.keys(currentPlayers);let pool=pids.filter(p=>p!==lastPid);if(!pool.length)pool=pids;
+    const target=pool[Math.floor(Math.random()*pool.length)];lastPid=target;
+    await dbSet('turn',{blankIdx:i,playerId:target,type:S.blanks[i],ts:Date.now()});
+    const got=await Promise.race([waitForAns(i).then(()=>true),wait(1800+S.timerSec*1000).then(()=>false)]);
+    if(!got){const snap=await dbRef(`answers/${i}`).once('value');if(!snap.val()){
+      await dbSet(`answers/${i}`,{word:'???',playerId:target,missed:true});
+      const ms=(currentPlayers[target]?.misses||0)+1;await dbSet(`players/${target}/misses`,ms);
+    }}
+    await wait(1500);
+  }
+  await dbSet('status','reveal');
+}
+function waitForAns(idx){return new Promise(r=>{const ref=dbRef(`answers/${idx}`);ref.on('value',s=>{if(s.val()){ref.off();r()}})})}
+
+async function onTurn(turn){
+  const pl=currentPlayers[turn.playerId];if(!pl)return;
+  await coldCallAnim(currentPlayers,turn.playerId);
+  $('wordPrompt').innerHTML=`We need a <b>${turn.type.toUpperCase()}</b>!`;
+  const mine=turn.playerId===S.pid;$('wordInput').disabled=!mine;
+  if(mine){$('wordInput').value='';$('wordInput').focus();$('wordInput').style.borderColor='var(--gold)'}
+  else{$('wordInput').style.borderColor=''}
+  startTimerVis(S.timerSec);playCountdown(S.timerSec);
+}
+async function coldCallAnim(players,targetId){
+  const cc=$('coldCall'),arr=Object.values(players);let i=0;
+  cc.innerHTML='<div class="flash" style="font-size:1.1rem;color:var(--gold)">🎤 CALLING...</div>';
+  await new Promise(r=>{const iv=setInterval(()=>{const p=arr[i%arr.length];cc.innerHTML=`<div style="font-size:2.5rem">${p.avatar}</div><div class="flash">${p.name}</div>`;i++;if(i>10+Math.random()*5){clearInterval(iv);const t=players[targetId];cc.innerHTML=`<div class="pop" style="font-size:3rem">${t.avatar}</div><div class="pop" style="font-size:1.3rem;color:var(--gold);margin-top:4px">${t.name}!</div>`;setTimeout(r,400)}},110)});
+}
+function startTimerVis(sec){
+  const fill=$('timerFill'),start=Date.now(),dur=sec*1000;fill.style.width='100%';fill.className='';
+  clearInterval(timerIv);timerIv=setInterval(()=>{const left=Math.max(0,1-(Date.now()-start)/dur);fill.style.width=(left*100)+'%';if(left<0.3)fill.className='danger';if(left<=0)clearInterval(timerIv)},50);
+}
+async function submitWord(){
+  const w=$('wordInput').value.trim();if(!w||!currentTurn||currentTurn.playerId!==S.pid)return;
+  await dbSet(`answers/${currentTurn.blankIdx}`,{word:w,playerId:S.pid,missed:false});
+  $('wordInput').value='';$('wordInput').disabled=true;
+}
+function renderDash(){
+  const ans=currentAnswers,pl=currentPlayers;
+  $('dashboard').innerHTML=Object.entries(pl).map(([id,p])=>{
+    const words=Object.values(ans).filter(a=>a.playerId===id&&!a.missed).length;
+    const misses=p.misses||0;
+    return `<div class="dash-row"><span class="av">${p.avatar}</span><span class="nm">${p.name}${id===S.pid?' (you)':''}</span><span class="st st-ok">${words} ✓</span><span class="st st-miss">${misses} ✗</span></div>`;
+  }).join('');
+}
+
+/* ═══════════════ SKETCH ═══════════════ */
+let skCtx,drawing=false,brush='#000';
+function initCanvas(){
+  const cv=$('sketchCanvas');skCtx=cv.getContext('2d');skCtx.lineWidth=3;skCtx.lineCap='round';skCtx.fillStyle='#fff';skCtx.fillRect(0,0,200,200);
+  const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  cv.onmousedown=e=>{drawing=true;skCtx.beginPath();skCtx.moveTo(...pos(e))};
+  cv.onmousemove=e=>{if(!drawing)return;skCtx.strokeStyle=brush;skCtx.lineTo(...pos(e));skCtx.stroke()};
+  cv.onmouseup=cv.onmouseleave=()=>drawing=false;
+  cv.ontouchstart=e=>{e.preventDefault();const t=e.touches[0];drawing=true;skCtx.beginPath();skCtx.moveTo(...pos(t))};
+  cv.ontouchmove=e=>{e.preventDefault();if(!drawing)return;const t=e.touches[0];skCtx.strokeStyle=brush;skCtx.lineTo(...pos(t));skCtx.stroke()};
+  cv.ontouchend=()=>drawing=false;
+  $('sketchTools').innerHTML='<div class="c-btn act" style="background:#000" onclick="setBrush(this,\'#000\')"></div><div class="c-btn" style="background:#ef4444" onclick="setBrush(this,\'#ef4444\')"></div><div class="c-btn" style="background:#3b82f6" onclick="setBrush(this,\'#3b82f6\')"></div><button class="e-btn" onclick="setBrush(this,\'#fff\')">Eraser</button><button class="e-btn" onclick="clrCanvas()">Clear</button>';
+}
+function setBrush(el,c){brush=c;document.querySelectorAll('.c-btn,.e-btn').forEach(e=>e.classList.remove('act'));el.classList.add('act')}
+function clrCanvas(){skCtx.fillStyle='#fff';skCtx.fillRect(0,0,200,200)}
+async function submitSketch(){await dbPush('sketches',{dataUrl:$('sketchCanvas').toDataURL('image/png',0.5),name:S.name,avatar:S.avatar});clrCanvas();toast('Sketch submitted!')}
+function renderGallery(sk){if(!sk)return;$('sketchGallery').innerHTML=Object.values(sk).map(s=>`<img class="sk-thumb" src="${s.dataUrl}" title="${s.avatar} ${s.name}" />`).join('')}
+
+/* ═══════════════ STORY REVEAL ═══════════════ */
+function showReveal(){
+  show('reveal');if(!S.isHost)$('comicBtn').style.display='none';
+  dbOn('templateIdx',i=>{S.template=TEMPLATES[i];S.blanks=parseBlanks(S.template.story)});
+  dbOn('answers',a=>{currentAnswers=a||{};renderStory()});
+}
+function renderStory(){
+  if(!S.template)return;let i=0;
+  $('storyText').innerHTML=S.template.story.replace(/\[([^\]]+)\]/g,()=>{
+    const a=currentAnswers[i++];if(!a)return'<mark class="missed">???</mark>';
+    return a.missed?`<mark class="missed">${a.word}</mark>`:`<mark>${a.word}</mark>`;
+  });
+}
+function buildStoryText(){
+  if(!S.template)return'';let i=0;
+  return S.template.story.replace(/\[([^\]]+)\]/g,()=>{const a=currentAnswers[i++];return a?a.word:'???'});
+}
+
+/* ═══════════════ COMIC GENERATION ═══════════════ */
+async function generateComic(){
+  const key=localStorage.getItem('mlcc-ai');if(!key)return toast('No API key found',1);
+  $('comicBtn').disabled=true;$('comicBtn').textContent='🎬 Generating...';
+  const story=buildStoryText();
+  const sys="You create comic panel descriptions from funny stories. Be concise. Max 2-3 sentences per field, 5 items per list.";
+  const prompt=`Create 6 comic panels from this PSG Mad Labs story for a 30-second animated comic. Return ONLY a JSON array of 6 objects: [{narration, dialogue, emoji, bg}]. narration=1-2 sentences. dialogue=funny speech bubble. emoji=1-3 emojis. bg=vivid CSS hex color.\n\nStory: ${story}`;
+  let full='';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4096,stream:true,system:sys,messages:[{role:'user',content:prompt}]})});
+    if(!res.ok)throw new Error('API '+res.status);
+    const reader=res.body.getReader(),dec=new TextDecoder();let buf='';
+    while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop()||'';
+      for(const ln of lines){if(!ln.startsWith('data: '))continue;const raw=ln.slice(6);if(raw==='[DONE]')continue;
+        try{const e=JSON.parse(raw);if(e.type==='content_block_delta'&&e.delta?.text)full+=e.delta.text}catch{}}}
+    const jm=full.match(/\[[\s\S]*\]/);if(!jm)throw new Error('No JSON in response');
+    const panels=JSON.parse(jm[0]);await dbSet('comic',panels);await dbSet('status','comic');
+  }catch(e){toast(e.message.slice(0,100),1);$('comicBtn').disabled=false;$('comicBtn').textContent='🎬 Generate Comic Movie'}
+}
+
+/* ═══════════════ COMIC RENDERER ═══════════════ */
+function showComic(){
+  show('comic');
+  dbOn('comic',panels=>{if(!panels||!panels.length)return;renderPanels(panels)});
+  dbOn('sketches',sk=>{currentSketches=sk||{}});
+}
+function renderPanels(panels){
+  const skArr=Object.values(currentSketches);
+  $('comicBox').innerHTML=panels.map((p,i)=>{
+    const sk=skArr[i]?`<img class="sk-img" src="${skArr[i].dataUrl}"/><div class="cred">${skArr[i].avatar} ${skArr[i].name}</div>`:'';
+    return `<div class="c-panel" style="background:${p.bg}" data-i="${i}"><div class="emo">${p.emoji}</div>${sk}<div class="nar">${p.narration}</div><div class="dia">${p.dialogue}</div></div>`;
+  }).join('');
+  $('comicDots').innerHTML=panels.map((_,i)=>`<div class="c-dot" data-i="${i}"></div>`).join('');
+  let cur=0;showPanel(0);
+  const iv=setInterval(()=>{cur++;if(cur>=panels.length){clearInterval(iv);$('playAgainBtn').style.display='block';return}showPanel(cur)},5000);
+}
+function showPanel(i){
+  document.querySelectorAll('.c-panel').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.c-dot').forEach(d=>d.classList.remove('act'));
+  const p=document.querySelector(`.c-panel[data-i="${i}"]`),d=document.querySelector(`.c-dot[data-i="${i}"]`);
+  if(p)p.classList.add('act');if(d)d.classList.add('act');
+}
+
+/* ═══════════════ EVENTS ═══════════════ */
+$('wordInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitWord()}});
+</script>
+</body>
+</html>
