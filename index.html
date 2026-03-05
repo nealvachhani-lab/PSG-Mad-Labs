@@ -90,7 +90,6 @@ select{width:100%;padding:8px;margin:4px 0;background:var(--sf);border:1px solid
 <div id="app">
   <div id="setup" class="screen active">
     <h1>🧪 PSG Mad Labs<span class="sub">Multiplayer party game</span></h1>
-    <textarea id="fbConfig" placeholder='Paste your Firebase config JSON here...&#10;{"apiKey":"...","databaseURL":"...","projectId":"..."}'></textarea>
     <input type="password" id="aiKey" placeholder="Anthropic API key (for comic generation)" />
     <button class="btn-gold" onclick="createGame()">🎮 Create Game</button>
   </div>
@@ -152,7 +151,8 @@ const TEMPLATES=[
 const AVATARS=['🦊','🐙','🦄','🤖','🎸','🚀','🌮','🎲','🦜','🧙','🐳','🎭'];
 
 /* ═══════════════ STATE ═══════════════ */
-const S={db:null,room:null,pid:null,name:null,avatar:null,isHost:false,timerSec:3,blanks:[],template:null,fbConfig:null};
+const FB_CONFIG={"apiKey":"AIzaSyCyBGz2NsZjsXi0y7BvkG4zrqho-mmr8iQ","authDomain":"psg-mad-labs.firebaseapp.com","databaseURL":"https://psg-mad-labs-default-rtdb.firebaseio.com","projectId":"psg-mad-labs","storageBucket":"psg-mad-labs.firebasestorage.app","messagingSenderId":"818840369163","appId":"1:818840369163:web:ea9af67f1d6deb56032f0e","measurementId":"G-X340ZNPHFC"};
+const S={db:null,room:null,pid:null,name:null,avatar:null,isHost:false,timerSec:3,blanks:[],template:null,fbConfig:FB_CONFIG};
 let currentPlayers={},currentAnswers={},currentTurn=null,currentSketches={},timerIv=null;
 
 /* ═══════════════ HELPERS ═══════════════ */
@@ -183,17 +183,16 @@ window.addEventListener('DOMContentLoaded',()=>{
   const hash=location.hash.slice(1),fc=new URLSearchParams(location.search).get('fc');
   $('avatarGrid').innerHTML=AVATARS.map(a=>`<div class="av-opt" onclick="pickAvatar(this,'${a}')">${a}</div>`).join('');
   $('tplSel').innerHTML=TEMPLATES.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+  const savedKey=localStorage.getItem('mlcc-ai');if(savedKey)$('aiKey').value=savedKey;
   if(hash&&fc){S.room=hash;S.fbConfig=JSON.parse(atob(fc));show('join')}
-  else{const saved=localStorage.getItem('mlcc-fb');if(saved)$('fbConfig').value=saved;show('setup')}
+  else{show('setup')}
 });
 
 /* ═══════════════ SETUP ═══════════════ */
 async function createGame(){
-  let cfg,raw=$('fbConfig').value.trim(),key=$('aiKey').value.trim();
-  if(!raw)return toast('Paste Firebase config',1);
-  try{cfg=JSON.parse(raw)}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)cfg=JSON.parse(m[0]);else return toast('Invalid config JSON',1)}
-  localStorage.setItem('mlcc-fb',raw);if(key)localStorage.setItem('mlcc-ai',key);
-  S.fbConfig=cfg;await loadFB(cfg);S.room=genCode();S.isHost=true;
+  const key=$('aiKey').value.trim();
+  if(key)localStorage.setItem('mlcc-ai',key);
+  await loadFB(S.fbConfig);S.room=genCode();S.isHost=true;
   await dbSet('status','lobby');show('join');
 }
 
